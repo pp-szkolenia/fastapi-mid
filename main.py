@@ -36,3 +36,11 @@ def create_task(body: dict = Body(...)):
     tasks_data.append(new_task)
 
     return {"message": "New task added", "details": new_task}
+
+
+@app.post("/users/")
+def create_user(body: dict = Body(...)):
+    new_user = body
+    users_data.append(new_user)
+
+    return {"message": "New user added", "details": new_user}
