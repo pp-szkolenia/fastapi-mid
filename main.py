@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
 import random
 
@@ -19,7 +19,7 @@ def get_item_by_id(items_list, id_):
 
 class TaskBody(BaseModel):
     description: str
-    priority: int | None = None  # < 3.10 -> priority: Optional[int] = None
+    priority: int | None = None
     is_complete: bool = False
 
 
@@ -64,13 +64,18 @@ def get_task_by_id(id_: int):
 @app.get("/users/{id_}")
 def get_user_by_id(id_: int):
     target_user = get_item_by_id(users_data, id_)
+
+    if not target_user:
+        message = {"error": f"User with id {id_} does not exist"}
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
+
     return {"result": target_user}
 
 
 @app.post("/tasks/")
 def create_task(body: TaskBody):
     new_task = body.model_dump()
-    random_id = random.randint(1, 10000)  # low probability of duplication
+    random_id = random.randint(1, 10000)
     new_task["id"] = random_id
 
     tasks_data.append(new_task)
