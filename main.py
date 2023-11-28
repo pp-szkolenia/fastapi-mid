@@ -115,3 +115,15 @@ def delete_task_by_id(id_: int):
 
     tasks_data.pop(target_index)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@app.delete("/users/{id_}")
+def delete_user_by_id(id_: int):
+    target_index = get_item_index_by_id(users_data, id_)
+
+    if target_index is None:
+        message = {"error": f"User with id {id_} does not exist"}
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
+
+    users_data.pop(target_index)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
