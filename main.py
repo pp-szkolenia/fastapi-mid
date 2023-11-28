@@ -12,6 +12,12 @@ class TaskBody(BaseModel):
     is_complete: bool = False
 
 
+class UserBody(BaseModel):
+    username: str
+    password: str
+    is_admin: bool = False
+
+
 tasks_data = [
     {"id": 1, "description": "Learn FastAPI", "priority": 3, "is_complete": True},
     {"id": 2, "description": "Do exercises", "priority": 2, "is_complete": False}
@@ -50,8 +56,10 @@ def create_task(body: TaskBody):
 
 
 @app.post("/users/")
-def create_user(body: dict = Body(...)):
-    new_user = body
+def create_user(body: UserBody):
+    new_user = body.model_dump()
+    random_id = random.randint(1, 10000)
+    new_user["id"] = random_id
     users_data.append(new_user)
 
     return {"message": "New user added", "details": new_user}
