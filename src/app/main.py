@@ -1,7 +1,8 @@
 from fastapi import FastAPI, HTTPException, status, Response
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
 import random
+
+from app.models import TaskBody, UserBody
 
 
 app = FastAPI()
@@ -22,18 +23,6 @@ def get_item_index_by_id(items_list, id_):
     for i, item in enumerate(items_list):
         if item["id"] == id_:
             return i
-
-
-class TaskBody(BaseModel):
-    description: str
-    priority: int | None = None
-    is_complete: bool = False
-
-
-class UserBody(BaseModel):
-    username: str
-    password: str
-    is_admin: bool = False
 
 
 tasks_data = [
