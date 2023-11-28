@@ -1,17 +1,25 @@
 from fastapi import FastAPI, Body
+from pydantic import BaseModel
+import random
 
 
 app = FastAPI()
 
 
+class TaskBody(BaseModel):
+    description: str
+    priority: int | None = None  # < 3.10 -> priority: Optional[int] = None
+    is_complete: bool = False
+
+
 tasks_data = [
-    {"description": "Learn FastAPI", "priority": 3, "is_complete": True},
-    {"description": "Do exercises", "priority": 2, "is_complete": False}
+    {"id": 1, "description": "Learn FastAPI", "priority": 3, "is_complete": True},
+    {"id": 2, "description": "Do exercises", "priority": 2, "is_complete": False}
 ]
 
 users_data = [
-    {"username": "Andrzej", "password": "qwerty123", "is_admin": True},
-    {"username": "Andżela", "password": "hasło1!", "is_admin": False},
+    {"id": 1, "username": "Andrzej", "password": "qwerty123", "is_admin": True},
+    {"id": 2, "username": "Andżela", "password": "hasło1!", "is_admin": False},
 ]
 
 
@@ -31,8 +39,11 @@ def get_users():
 
 
 @app.post("/tasks/")
-def create_task(body: dict = Body(...)):
-    new_task = body
+def create_task(body: TaskBody):
+    new_task = body.model_dump()
+    random_id = random.randint(1, 10000)  # low probability of duplication
+    new_task["id"] = random_id
+
     tasks_data.append(new_task)
 
     return {"message": "New task added", "details": new_task}
