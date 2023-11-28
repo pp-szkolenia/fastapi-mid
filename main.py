@@ -129,6 +129,22 @@ def delete_user_by_id(id_: int):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+@app.put("/tasks/{id_}")
+def update_task_by_id(id_: int, body: TaskBody):
+    target_index = get_item_index_by_id(tasks_data, id_)
+
+    if target_index is None:
+        message = {"error": f"Task with id {id_} does not exist"}
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
+
+    updated_task = body.model_dump()
+    updated_task["id"] = id_
+    tasks_data[target_index] = updated_task
+
+    message = {"message": f"Task with id {id_} updated", "new_value": updated_task}
+    return JSONResponse(status_code=status.HTTP_200_OK, content=message)
+
+
 @app.put("/users/{id_}")
 def update_user_by_id(id_: int, body: UserBody):
     target_index = get_item_index_by_id(users_data, id_)
