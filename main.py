@@ -1,9 +1,20 @@
-from fastapi import FastAPI, Body
+from fastapi import FastAPI
 from pydantic import BaseModel
 import random
 
 
 app = FastAPI()
+
+
+def get_item_by_id(items_list, id_):
+    for item in items_list:
+        if item["id"] == id_:
+            result = item
+            break
+    else:
+        result = None
+
+    return result
 
 
 class TaskBody(BaseModel):
@@ -42,6 +53,12 @@ def get_tasks():
 @app.get("/users/")
 def get_users():
     return {"result": users_data}
+
+
+@app.get("/users/{id_}")
+def get_user_by_id(id_: int):
+    target_user = get_item_by_id(users_data, id_)
+    return {"result": target_user}
 
 
 @app.post("/tasks/")
