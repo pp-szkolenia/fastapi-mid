@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, status, Response, Depends
 
 from app.models import (UserBody, UserResponse, GetAllUsersResponse, GetSingleUserResponse,
                         PostUserResponse, PutUserResponse, PutUserNoDetailResponse, SortOrders)
+from app.utils import hash_password_in_body
 from sqlalchemy.orm import Session
 from sqlalchemy import func, asc, desc
 from db.orm import get_session
@@ -59,6 +60,8 @@ def get_user_by_id(id_: int, session: Session = Depends(get_session)):
 @router.post("/users/", status_code=status.HTTP_201_CREATED, tags=["users"],
              response_model=PostUserResponse)
 def create_user(body: UserBody, session: Session = Depends(get_session)):
+    body = hash_password_in_body(body)
+
     user_dict = body.model_dump()
     new_user = UserTable(**user_dict)
 
@@ -94,6 +97,8 @@ def update_user_by_id(id_: int, body: UserBody, session: Session = Depends(get_s
     if not filter_query.first():
         message = {"error": f"User with id {id_} does not exist"}
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=message)
+
+    body = hash_password_in_body(body)
 
     filter_query.update(body.model_dump())
     session.commit()
