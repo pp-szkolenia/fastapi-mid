@@ -2,10 +2,12 @@ from fastapi import APIRouter, HTTPException, status, Response, Depends
 from sqlalchemy import between, asc, desc
 
 from app.models import (TaskBody, TaskResponse, GetSingleTaskResponse, GetAllTasksResponse,
-                        PostTaskResponse, PutTaskResponse, SortOrders, PostTaskNoDetailResponse)
+                        PostTaskResponse, PutTaskResponse, SortOrders, PostTaskNoDetailResponse,
+                        TokenData)
 from sqlalchemy.orm import Session
 from db.orm import get_session
 from db.models import TaskTable
+from app import oauth2
 
 
 router = APIRouter()
@@ -60,7 +62,8 @@ def get_task_by_id(id_: int, session: Session = Depends(get_session)):
 @router.post("/tasks/", status_code=status.HTTP_201_CREATED, tags=["tasks"],
              response_model=PostTaskResponse | PostTaskNoDetailResponse)
 def create_task(body: TaskBody, session: Session = Depends(get_session),
-                show_task: bool = True):
+                show_task: bool = True,
+                user_data: TokenData = Depends(oauth2.get_current_user)):
     task_dict = body.model_dump()
     new_task = TaskTable(**task_dict)
 
@@ -73,13 +76,15 @@ def create_task(body: TaskBody, session: Session = Depends(get_session),
                             priority=new_task.priority,
                             is_complete=new_task.is_complete)
     if show_task:
-        return {"message": "New task added", "details": new_task}
+        return {"message": f"New task added by user {user_data.user_id}",
+                "details": new_task}
     else:
-        return {"message": "New task added"}
+        return {"message": f"New task added by user {user_data.user_id}"}
 
 
 @router.delete("/tasks/{id_}", tags=["tasks"])
-def delete_task_by_id(id_: int, session: Session = Depends(get_session)):
+def delete_task_by_id(id_: int, session: Session = Depends(get_session),
+                      _: TokenData = Depends(oauth2.get_current_user)):
     deleted_task = session.query(TaskTable).filter_by(id_number=id_).first()
 
     if not deleted_task:
