@@ -17,4 +17,4 @@ app.include_router(users.router)
 
 @app.get("/", description="Test endpoint for demonstration purposes")
 def root():
-    return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "Hello world"})
+    return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "Hello world!"})
