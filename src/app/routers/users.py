@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, status, Response, Depends
 
 from app.models import (UserBody, UserResponse, GetAllUsersResponse, GetSingleUserResponse,
-                        PostUserResponse, PutUserResponse)
+                        PostUserResponse, PutUserResponse, PutUserNoDetailResponse, SortOrders)
 from sqlalchemy.orm import Session
+from sqlalchemy import func, asc, desc
 from db.orm import get_session
 from db.models import UserTable
 
@@ -11,8 +12,24 @@ router = APIRouter()
 
 
 @router.get("/users/", tags=["users"], response_model=GetAllUsersResponse)
-def get_users(session: Session = Depends(get_session)):
-    users_data = session.query(UserTable).all()
+def get_users(session: Session = Depends(get_session), is_admin: bool | None = None,
+              password_limit: int | None = None, sort_username: SortOrders = None):
+    users_data = session.query(UserTable)
+    if is_admin is not None:
+        users_data = users_data.filter_by(is_admin=is_admin)
+
+    if password_limit is not None:
+        users_data = users_data.filter(func.length(UserTable.password) <= password_limit)
+
+    if sort_username is not None:
+        if sort_username == SortOrders.ASCENDING:
+            sort_func = asc
+        elif sort_username == SortOrders.DESCENDING:
+            sort_func = desc
+
+        users_data = users_data.order_by(sort_func(UserTable.username))
+
+    users_data = users_data.all()
 
     users_data = [UserResponse(id_=user.id_number,
                                username=user.username,
@@ -69,8 +86,9 @@ def delete_user_by_id(id_: int, session: Session = Depends(get_session)):
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put("/users/{id_}", tags=["users"], response_model=PutUserResponse)
-def update_user_by_id(id_: int, body: UserBody, session: Session = Depends(get_session)):
+@router.put("/users/{id_}", tags=["users"], response_model=PutUserResponse | PutUserNoDetailResponse)
+def update_user_by_id(id_: int, body: UserBody, session: Session = Depends(get_session),
+                      show_user: bool = True):
     filter_query = session.query(UserTable).filter_by(id_number=id_)
 
     if not filter_query.first():
@@ -85,6 +103,9 @@ def update_user_by_id(id_: int, body: UserBody, session: Session = Depends(get_s
     updated_user = UserResponse(id_=updated_user.id_number, username=updated_user.username,
                                 password=updated_user.password, is_admin=updated_user.is_admin)
 
-    message = {"message": f"User with id {id_} updated", "new_value": updated_user}
+    if show_user:
+        message = {"message": f"User with id {id_} updated", "new_value": updated_user}
+    else:
+        message = {"message": f"User with id {id_} updated"}
 
     return message

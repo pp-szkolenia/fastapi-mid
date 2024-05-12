@@ -68,6 +68,10 @@ class PutUserResponse(BaseModel):
     new_value: UserResponse
 
 
+class PutUserNoDetailResponse(BaseModel):
+    message: str
+
+
 class SortOrders(Enum):
     ASCENDING = "asc"
     DESCENDING = "desc"

@@ -5,8 +5,8 @@ from app.routers import tasks, users
 
 
 app = FastAPI(
-    docs_url="/api/docs",
-    redoc_url="/api/redoc",
+    docs_url="/docs",
+    redoc_url="/redoc",
     title="Task manager API",
     description="Description of my API which is visible in the documentation",
     version="1.0.0"
