@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from enum import Enum
 
 
 class TaskBody(BaseModel):
@@ -33,6 +34,10 @@ class PostTaskResponse(BaseModel):
     details: TaskResponse
 
 
+class PostTaskNoDetailResponse(BaseModel):
+    message: str
+
+
 class PutTaskResponse(BaseModel):
     message: str
     new_value: TaskResponse
@@ -61,3 +66,8 @@ class PostUserResponse(BaseModel):
 class PutUserResponse(BaseModel):
     message: str
     new_value: UserResponse
+
+
+class SortOrders(Enum):
+    ASCENDING = "asc"
+    DESCENDING = "desc"

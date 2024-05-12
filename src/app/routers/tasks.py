@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, status, Response, Depends
-from fastapi.responses import JSONResponse
+from sqlalchemy import between, asc, desc
 
 from app.models import (TaskBody, TaskResponse, GetSingleTaskResponse, GetAllTasksResponse,
-                        PostTaskResponse, PutTaskResponse)
+                        PostTaskResponse, PutTaskResponse, SortOrders, PostTaskNoDetailResponse)
 from sqlalchemy.orm import Session
 from db.orm import get_session
 from db.models import TaskTable
@@ -12,8 +12,24 @@ router = APIRouter()
 
 
 @router.get("/tasks/", tags=["tasks"], response_model=GetAllTasksResponse)
-def get_tasks(session: Session = Depends(get_session)):
-    tasks_data = session.query(TaskTable).all()
+def get_tasks(session: Session = Depends(get_session), is_complete: bool | None = None,
+              min_priority: int = 1, max_priority: int = 5, sort_description: SortOrders = None):
+    tasks_data = session.query(TaskTable)  # .all()
+
+    if is_complete is not None:
+        tasks_data = tasks_data.filter_by(is_complete=is_complete)
+
+    tasks_data = tasks_data.filter(between(TaskTable.priority, min_priority, max_priority))
+
+    if sort_description is not None:
+        if sort_description == SortOrders.ASCENDING:
+            sort_func = asc
+        elif sort_description == SortOrders.DESCENDING:
+            sort_func = desc
+
+        tasks_data = tasks_data.order_by(sort_func(TaskTable.description))
+
+    tasks_data = tasks_data.all()
 
     tasks_data = [
         TaskResponse(id_=task.id_number,
@@ -42,8 +58,9 @@ def get_task_by_id(id_: int, session: Session = Depends(get_session)):
 
 
 @router.post("/tasks/", status_code=status.HTTP_201_CREATED, tags=["tasks"],
-             response_model=PostTaskResponse)
-def create_task(body: TaskBody, session: Session = Depends(get_session)):
+             response_model=PostTaskResponse | PostTaskNoDetailResponse)
+def create_task(body: TaskBody, session: Session = Depends(get_session),
+                show_task: bool = True):
     task_dict = body.model_dump()
     new_task = TaskTable(**task_dict)
 
@@ -55,8 +72,10 @@ def create_task(body: TaskBody, session: Session = Depends(get_session)):
                             description=new_task.description,
                             priority=new_task.priority,
                             is_complete=new_task.is_complete)
-
-    return {"message": "New task added", "details": new_task}
+    if show_task:
+        return {"message": "New task added", "details": new_task}
+    else:
+        return {"message": "New task added"}
 
 
 @router.delete("/tasks/{id_}", tags=["tasks"])
