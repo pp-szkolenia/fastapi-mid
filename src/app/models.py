@@ -36,3 +36,28 @@ class PostTaskResponse(BaseModel):
 class PutTaskResponse(BaseModel):
     message: str
     new_value: TaskResponse
+
+
+class UserResponse(BaseModel):
+    id_: int
+    username: str
+    password: str
+    is_admin: bool
+
+
+class GetSingleUserResponse(BaseModel):
+    result: UserResponse
+
+
+class GetAllUsersResponse(BaseModel):
+    result: list[UserResponse]
+
+
+class PostUserResponse(BaseModel):
+    message: str
+    details: UserResponse
+
+
+class PutUserResponse(BaseModel):
+    message: str
+    new_value: UserResponse
