@@ -2,7 +2,7 @@ from fastapi import FastAPI, status, Request
 from fastapi.responses import JSONResponse
 import time
 
-from app.routers import tasks, users, auth
+from app.routers import tasks, users, auth, frontend
 from app.middleware import confirm_deletion, log_operations
 
 
@@ -16,11 +16,7 @@ app = FastAPI(
 app.include_router(tasks.router)
 app.include_router(users.router)
 app.include_router(auth.router)
-
-
-@app.get("/", description="Test endpoint for demonstration purposes")
-def root():
-    return JSONResponse(status_code=status.HTTP_200_OK, content={"message": "Hello world!"})
+app.include_router(frontend.router)
 
 
 @app.middleware("http")

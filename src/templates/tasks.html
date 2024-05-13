@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista Zadań</title>
+    <style>
+        .task {
+            border: 2px solid;
+            margin: 10px;
+            padding: 5px;
+        }
+        .complete {
+            border-color: green;
+        }
+        .incomplete {
+            border-color: black;
+        }
+
+        .tasks-grid {
+            display: flex;
+            flex-wrap: wrap;
+            list-style-type: none;
+        }
+        .tasks-grid li {
+            flex: 0 0 30%;
+            margin: 5px;
+        }
+
+        #submitTask {
+            display: flex;
+            flex-direction: column;
+            width: 200px;
+        }
+
+        #submitTask label,
+        #submitTask input,
+        #submitTask button {
+            margin-bottom: 10px;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Lista Zadań</h1>
+    <ul class="tasks-grid">
+        {% for task in tasks %}
+            {% if not task.is_complete %}
+                <li class="task incomplete">
+                    <strong>ID:</strong> {{ task.id_ }} <br>
+                    <strong>Opis:</strong> {{ task.description }} <br>
+                    <strong>Priorytet:</strong> {{ task.priority }} <br>
+                    <input type="checkbox" id="task-{{ task.id_ }}" name="task-{{ task.id_ }}"
+                           onclick="updateTaskStatus({{ task.id_ }}, '{{task.description}}', {{task.priority}}, this.checked)"
+                           {{ 'checked' if task.is_complete else '' }}>
+                    <label for="task-{{ task.id_ }}">W toku</label>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+    <br> <br>
+    <ul class="tasks-grid">
+        {% for task in tasks %}
+            {% if task.is_complete %}
+                <li class="task complete">
+                    <strong>ID:</strong> {{ task.id_ }} <br>
+                    <strong>Opis:</strong> {{ task.description }} <br>
+                    <strong>Priorytet:</strong> {{ task.priority }} <br>
+
+                    <input type="checkbox" id="task-{{ task.id_ }}" name="task-{{ task.id_ }}"
+                           onclick="updateTaskStatus({{ task.id_ }}, '{{task.description}}', {{task.priority}}, this.checked)"
+                           {{ 'checked' if task.is_complete else '' }}>
+                    <label for="task-{{ task.id_ }}">Zakończone</label>
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+
+    <br><br>
+    <form action="/tasks/" method="post" id="submitTask">
+        <h4>Utwórz Nowe Zadanie</h4>
+        <label for="description">Opis:</label>
+        <input type="text" id="description" name="description" required><br><br>
+        <label for="priority">Priorytet:</label>
+        <input type="number" id="priority" name="priority" required><br><br>
+        <button type="submit">Utwórz Zadanie</button>
+    </form>
+
+    <script>
+
+        function updateTaskStatus(taskId, description, priority, isComplete) {
+            const data = {description: description, priority: priority, is_complete: isComplete };
+
+            fetch(`/tasks/${taskId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                window.location.reload(true);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+
+
+        document.getElementById('submitTask').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = {
+                description: document.getElementById('description').value,
+                priority: document.getElementById('priority').value
+            };
+            fetch('/tasks/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('jwtToken')}`
+
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+             .then(data => {
+                console.log(data);
+            })
+            .then(data => {
+            window.location.reload(true);
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+
+        function fetchWithToken(url) {
+            // Pobieranie tokena JWT z local storage
+            const token = localStorage.getItem('jwtToken');
+
+            // Ustawienie nagłówków żądania
+            const headers = new Headers();
+            if (token) {
+                headers.append('Authorization', `Bearer ${token}`);
+            }
+
+            // Wykonanie żądania z nagłówkiem Authorization
+            fetch(url, {
+                method: 'GET',
+                headers: headers
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Rejestracja</title>
+</head>
+
+<body>
+    <h2>Rejestracja</h2>
+
+    <form method="POST" action="/users/" id="registerForm">
+        <div>
+            <label for="username">Nazwa użytkownika:</label>
+            <br>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div>
+            <br>
+            <label for="password">Hasło:</label>
+            <br>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <br>
+        <div>
+            <button type="submit">Zarejestruj się</button>
+        </div>
+    </form>
+
+    <br>
+    <br>
+    <a href="/">Masz już konto? Zaloguj się</a>
+
+     <script>
+        document.getElementById('registerForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value
+            };
+            fetch('/users/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+             .then(data => {
+                console.log(data);
+                window.location.href = '/';
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+
+</body>
+</html>
